@@ -23,14 +23,15 @@ def webhook():
         keyboard = types.InlineKeyboardMarkup()
 
         if not callback_data:
-            if text == BACK_TO_MAIN_MENU:
-                keyboard = createMainMenu()
-            else:
-                keyboard = createMainMenu()
-
+            keyboard = createMainMenu()
             bot.send_message(chat_id, text='✅ Меню', reply_markup=keyboard)
         else:
-            keyboard.add(createBackToMainMenu())
+            if text == BACK_TO_MAIN_MENU:
+                keyboard = createMainMenu()
+                text = '✅ Меню'
+            else:
+                keyboard.add(createBackToMainMenu())
+
             bot.send_message(chat_id, text=f'✅ {text}', reply_markup=keyboard)
 
     except Exception as e:
