@@ -10,7 +10,7 @@ def webhook():
 
     try:
         bot = telebot.TeleBot(data.get('token'))
-        bot.send_message(data.get('message').get('chat').get('id'), 'ok')
+        bot.send_message(data.get('chat_id'), data.get('text'))
     except Exception as e:
         return {'type': 'FAIL', 'message': str(e)}
 
