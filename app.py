@@ -12,6 +12,7 @@ MY_BOTS = 'my_bots'
 BUY_BOT = 'buy_bot'
 BOT_RECORD_CLIENTS = 'bot_recording_clients'
 BOT_CONNECT_TOKEN = 'bot_connect_token'
+DELIMITER = ';'
 
 
 @app.post('/aif/admin/webhook')
@@ -42,7 +43,9 @@ def webhook():
                 keyboard.add(createBackToMainMenu())
             elif text == BOT_RECORD_CLIENTS:
                 text = createManualAddBot()
-                keyboard.add(createConnectBot())
+                keyboard.add(createConnectBot(BOT_RECORD_CLIENTS))
+                keyboard.add(createBackToMainMenu())
+            elif BOT_CONNECT_TOKEN in text:
                 keyboard.add(createBackToMainMenu())
             else:
                 keyboard.add(createBackToMainMenu())
@@ -70,8 +73,8 @@ def createBuyBotsMenu():
     return keyboard
 
 
-def createConnectBot():
-    return types.InlineKeyboardButton(text='✅ Привязать TOKEN', callback_data=BOT_CONNECT_TOKEN)
+def createConnectBot(type):
+    return types.InlineKeyboardButton(text='✅ Привязать TOKEN', callback_data=f'{BOT_CONNECT_TOKEN}{DELIMITER}{type}')
 
 
 def createBackToMainMenu():
