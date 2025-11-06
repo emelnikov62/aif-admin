@@ -15,23 +15,26 @@ def webhook():
     token = data.get('token')
     chat_id = data.get('chat_id')
     text = data.get('text')
+    callback_data = data.get('callback_data')
 
     try:
         bot = telebot.TeleBot(token)
 
-        keyboard = None
+        if callback_data is None:
+            if text == STARTED:
+                keyboard = None
+            else:
+                keyboard = types.InlineKeyboardMarkup()
 
-        if text == STARTED:
-            keyboard = types.InlineKeyboardMarkup()
-            key_yes = types.InlineKeyboardButton(text='Да', callback_data='yes')
-            keyboard.add(key_yes)
-            key_no = types.InlineKeyboardButton(text='Нет', callback_data='no')
-            keyboard.add(key_no)
+                my_bots = types.InlineKeyboardButton(text='🛅 Мои боты', callback_data='my_bots')
+                keyboard.add(my_bots)
 
-        if keyboard is not None:
-            bot.send_message(chat_id, text='Выберите', reply_markup=keyboard)
+                buy_bot = types.InlineKeyboardButton(text='💰 Купить бота', callback_data='buy_bot')
+                keyboard.add(buy_bot)
+
+            bot.send_message(chat_id, text='✅ Меню', reply_markup=keyboard)
         else:
-            bot.send_message(chat_id, text='ok')
+            bot.send_message(chat_id, text='✅')
 
     except Exception as e:
         return {'type': FAILURE, 'message': str(e)}
