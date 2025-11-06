@@ -23,6 +23,7 @@ DELIMITER = ';'
 BOT_LOGS_ID = -1002391679452
 
 
+# webhook
 @app.post('/aif/admin/webhook')
 def webhook():
     data = request.get_json()
@@ -78,6 +79,7 @@ def webhook():
     return {'type': SUCCESS}
 
 
+# create main menu
 def createMainMenu():
     keyboard = types.InlineKeyboardMarkup()
     keyboard.add(types.InlineKeyboardButton(text='📦 Мои боты', callback_data=MY_BOTS))
@@ -86,6 +88,7 @@ def createMainMenu():
     return keyboard
 
 
+# create buy bots menu
 def createBuyBotsMenu():
     try:
         keyboard = types.InlineKeyboardMarkup()
@@ -102,6 +105,7 @@ def createBuyBotsMenu():
         return types.InlineKeyboardMarkup()
 
 
+# get aif bot types
 def getAifBotTypes():
     paramsDb = getDbParams()
     connection = psycopg2.connect(**paramsDb)
@@ -118,6 +122,7 @@ def getAifBotTypes():
     return botTypes
 
 
+# get user aif bots
 def getMyAifBots(id):
     paramsDb = getDbParams()
     connection = psycopg2.connect(**paramsDb)
@@ -138,11 +143,13 @@ def getMyAifBots(id):
     return myBots
 
 
+# get database param connection
 def getDbParams():
     return {'database': 'n8n_db', 'user': 'n8n_user', 'password': 'Mery1029384756$',
             'host': 'amvera-emelnikov62-cnpg-n8n-db-rw', 'port': '5432'}
 
 
+# create user bot
 def createBot(text, id):
     try:
         id_user_bot = None
@@ -174,14 +181,17 @@ def createBot(text, id):
         return None
 
 
+# create connect bot button
 def createConnectBot(type):
     return types.InlineKeyboardButton(text='✅ Привязать TOKEN', callback_data=f'{BOT_CONNECT_TOKEN}{DELIMITER}{type}')
 
 
+# create back button
 def createBack(type):
     return types.InlineKeyboardButton(text='⬅ Назад', callback_data=type)
 
 
+# create my bots menu
 def createMyBotsMenu(id):
     myBots = getMyAifBots(id)
 
@@ -201,6 +211,7 @@ def createMyBotsMenu(id):
     return keyboard
 
 
+# create manual to add bot
 def createManualAddBot():
     return ('📋 Инструкция по подключению бота:\n\n'
             '   ✅ создать бота при помощи @BotFather\n\n'
@@ -208,6 +219,7 @@ def createManualAddBot():
             '   ✅ настроить бота после привязки под свою специфику\n\n')
 
 
+# send log to group TG
 def sendLog(text):
     bot.send_message(BOT_LOGS_ID, text=text)
 
