@@ -175,6 +175,8 @@ def createBot(text, id):
             sql = f"insert into n8n_test.aif_users(tg_id) values('{id}') returning id"
             cursor.execute(sql)
             id_user = cursor.fetchone()[0]
+        else:
+            id_user = cursor.fetchone()[0]
 
         if id_user is not None:
             botType = text.split(DELIMITER)[1]
