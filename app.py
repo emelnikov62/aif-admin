@@ -8,6 +8,9 @@ SUCCESS = 'SUCCESS'
 FAILURE = 'FAILURE'
 STARTED = 'start'
 BACK_TO_MAIN_MENU = 'back_to_main_menu'
+MY_BOTS = 'my_bots'
+BUY_BOT = 'buy_bot'
+BOT_RECORD_CLIENTS = 'bot_recording_clients'
 
 
 @app.post('/aif/admin/webhook')
@@ -29,6 +32,13 @@ def webhook():
             if text == BACK_TO_MAIN_MENU:
                 keyboard = createMainMenu()
                 text = 'Меню'
+            elif text == MY_BOTS:
+                text = '...'
+                keyboard.add(createBackToMainMenu())
+            elif text == BUY_BOT:
+                text = 'Выберите бота'
+                keyboard.add(createBuyBotsMenu())
+                keyboard.add(createBackToMainMenu())
             else:
                 keyboard.add(createBackToMainMenu())
 
@@ -42,8 +52,15 @@ def webhook():
 
 def createMainMenu():
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton(text='🛅 Мои боты', callback_data='my_bots'))
-    keyboard.add(types.InlineKeyboardButton(text='💰 Купить бота', callback_data='buy_bot'))
+    keyboard.add(types.InlineKeyboardButton(text='🛅 Мои боты', callback_data=MY_BOTS))
+    keyboard.add(types.InlineKeyboardButton(text='💰 Купить бота', callback_data=BUY_BOT))
+
+    return keyboard
+
+
+def createBuyBotsMenu():
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.add(types.InlineKeyboardButton(text='📝 Бот записи клиентов', callback_data=BOT_RECORD_CLIENTS))
 
     return keyboard
 
