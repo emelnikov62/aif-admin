@@ -45,6 +45,7 @@ def webhook():
                 text = '✅ Меню'
                 keyboard = createMainMenu()
             elif text == MY_BOTS or text == BACK_TO_MY_BOTS_MENU or BOT_CREATE in text:
+                print(text)
                 if BOT_CREATE in text:
                     createBot(text, chat_id)
 
@@ -55,10 +56,6 @@ def webhook():
                 text = '✅ Выберите бота'
                 keyboard = createBuyBotsMenu()
                 keyboard.add(createBack(BACK_TO_MAIN_MENU))
-            # elif BOT_CREATE in text:
-            #     text = createManualAddBot()
-            #     keyboard.add(createConnectBot(BOT_RECORD_CLIENTS))
-            #     keyboard.add(createBack(BACK_TO_BUY_BOTS_MENU))
             elif BOT_CONNECT_TOKEN in text:
                 text = '✏ Отправьте в сообщении TOKEN бота'
                 keyboard.add(createBack(BACK_TO_MY_BOTS_MENU))
@@ -119,14 +116,19 @@ def createBot(text, id):
         sql = f'insert into n8n_test.aif_users(tg_id) values({id}) returning id'
         cursor.execute(sql)
         idRecord = cursor.fetchone()[0]
+        print(idRecord)
         if idRecord is not None:
             type = text.split(DELIMITER)[1]
+            print(type)
             cursor.execute('select * from n8n_test.aif_bots t where t.type = %s', (type))
             idBot = cursor.fetchone()[0]
+            print(idBot)
 
             if idBot is not None:
                 sql = f'insert into n8n_test.aif_user_bots(aif_user_id, aif_bot_id) values({idRecord}, {idBot}) returning id'
                 cursor.execute(sql)
+                idUserBot = cursor.fetchone()[0]
+                print(idUserBot)
 
         connection.close()
     except Exception as e:
