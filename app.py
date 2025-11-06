@@ -16,6 +16,7 @@ BACK_TO_BUY_BOTS_MENU = 'back_to_buy_bots_menu'
 MY_BOTS = 'my_bots'
 BUY_BOT = 'buy_bot'
 BOT_CREATE = 'bot_create'
+BOT_SELECT = 'bot_select'
 BOT_RECORD_CLIENTS = 'recording_clients'
 BOT_CONNECT_TOKEN = 'bot_connect_token'
 DELIMITER = ';'
@@ -46,11 +47,18 @@ def webhook():
                 text = '✅ Меню'
                 keyboard = createMainMenu()
             elif text == MY_BOTS or text == BACK_TO_MY_BOTS_MENU or BOT_CREATE in text:
-                if BOT_CREATE in text:
-                    createBot(text, chat_id)
-
                 text = '✅ Меню'
-                keyboard.add(createMyBotsMenu())
+
+                if BOT_CREATE in text:
+                    id_user_bot = createBot(text, chat_id)
+                    if id_user_bot is None:
+                        text = '❌ Не удалось создать бота. Попробуйте еще раз.'
+
+                keyboard = createMyBotsMenu(chat_id)
+                if keyboard is None:
+                    text = '✅ У Вас пока нет ботов'
+                    keyboard = types.InlineKeyboardMarkup()
+
                 keyboard.add(createBack(BACK_TO_MAIN_MENU))
             elif text == BUY_BOT or text == BACK_TO_BUY_BOTS_MENU:
                 text = '✅ Выберите бота'
@@ -80,26 +88,54 @@ def createMainMenu():
 
 def createBuyBotsMenu():
     try:
-        paramsDb = getDbParams()
-        connection = psycopg2.connect(**paramsDb)
-
-        cursor = connection.cursor()
-        cursor.execute('select b.type, b.description from n8n_test.aif_bots b where b.active')
-
-        if cursor.rowcount == 0:
-            return types.InlineKeyboardMarkup()
-
-        rows = cursor.fetchall()
-        connection.close()
         keyboard = types.InlineKeyboardMarkup()
-        for row in rows:
-            keyboard.add(
-                types.InlineKeyboardButton(text=f'✅ {row[1]}', callback_data=f'{BOT_CREATE}{DELIMITER}{row[0]}'))
+
+        botTypes = getAifBotTypes()
+        if botTypes is not None:
+            for botType in botTypes:
+                keyboard.add(types.InlineKeyboardButton(text=f'✅ {botType[1]}',
+                                                        callback_data=f'{BOT_CREATE}{DELIMITER}{botType[0]}'))
 
         return keyboard
     except Exception as e:
         sendLog(str(e))
         return types.InlineKeyboardMarkup()
+
+
+def getAifBotTypes():
+    paramsDb = getDbParams()
+    connection = psycopg2.connect(**paramsDb)
+
+    cursor = connection.cursor()
+    cursor.execute('select b.type, b.description from n8n_test.aif_bots b where b.active')
+
+    if cursor.rowcount == 0:
+        return None
+
+    botTypes = cursor.fetchall()
+    connection.close()
+
+    return botTypes
+
+
+def getMyAifBots(id):
+    paramsDb = getDbParams()
+    connection = psycopg2.connect(**paramsDb)
+
+    cursor = connection.cursor()
+    cursor.execute(f"select aub.id, ab.type, ab.description, aub.active"
+                   "  from n8n_test.aif_user_bots aub"
+                   "  join n8n_test.aif_bots ab on aub.aif_bot_id = ab.id"
+                   "  join n8n_test.aif_users au on au.id = aub.aif_user_id"
+                   " where au.tg_id = {id}")
+
+    if cursor.rowcount == 0:
+        return None
+
+    myBots = cursor.fetchall()
+    connection.close()
+
+    return myBots
 
 
 def getDbParams():
@@ -109,28 +145,31 @@ def getDbParams():
 
 def createBot(text, id):
     try:
+        id_user_bot = None
+
         paramsDb = getDbParams()
         connection = psycopg2.connect(**paramsDb)
 
         cursor = connection.cursor()
         sql = f'insert into n8n_test.aif_users(tg_id) values({id}) returning id'
         cursor.execute(sql)
-        idRecord = cursor.fetchone()[0]
-        if idRecord is not None:
-            type = text.split(DELIMITER)[1]
-            cursor.execute(f"select t.id from n8n_test.aif_bots t where t.type = '{type}'")
-            idBot = cursor.fetchone()[0]
-            sendLog(idBot)
+        id_record = cursor.fetchone()[0]
+        if id_record is not None:
+            botType = text.split(DELIMITER)[1]
+            cursor.execute(f"select t.id from n8n_test.aif_bots t where t.type = '{botType}'")
+            id_bot = cursor.fetchone()[0]
 
-            if idBot is not None:
-                sql = f'insert into n8n_test.aif_user_bots(aif_user_id, aif_bot_id) values({idRecord}, {idBot}) returning id'
+            if id_bot is not None:
+                sql = f'insert into n8n_test.aif_user_bots(aif_user_id, aif_bot_id) values({id_record}, {id_bot}) returning id'
                 cursor.execute(sql)
-                idUserBot = cursor.fetchone()[0]
-                sendLog(idUserBot)
+                id_user_bot = cursor.fetchone()[0]
 
         connection.close()
+
+        return id_user_bot
     except Exception as e:
         sendLog(e)
+        return None
 
 
 def createConnectBot(type):
@@ -141,8 +180,23 @@ def createBack(type):
     return types.InlineKeyboardButton(text='⬅ Назад', callback_data=type)
 
 
-def createMyBotsMenu():
-    return types.InlineKeyboardButton(text='⬅ Назад', callback_data=BACK_TO_MAIN_MENU)
+def createMyBotsMenu(id):
+    myBots = getMyAifBots(id)
+
+    if myBots is None:
+        return None
+
+    keyboard = types.InlineKeyboardMarkup()
+    for myBot in myBots:
+        if myBot[3]:
+            text = '✅'
+        else:
+            text = '❌'
+        text = f'{text} {myBot[2]} {DELIMITER} {myBot[0]}'
+        keyboard.add(types.InlineKeyboardButton(text=text,
+                                                callback_data=f'{BOT_SELECT}{DELIMITER}{myBot[0]}{DELIMITER}{myBot[1]}'))
+
+    return keyboard
 
 
 def createManualAddBot():
