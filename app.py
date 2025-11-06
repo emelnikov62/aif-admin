@@ -30,48 +30,50 @@ def webhook():
     chat_id = data.get('chat_id')
     text = data.get('text')
     callback_data = data.get('callback')
+    message = None
 
     try:
         keyboard = types.InlineKeyboardMarkup()
 
         if not callback_data:
             if len(text) == 46 and ':' in text:
-                text = '✅ TOKEN бота привзяан'
+                message = '✅ TOKEN бота привзяан'
                 keyboard.add(createBack(BACK_TO_MY_BOTS_MENU))
             else:
-                text = '✅ Меню'
+                message = '✅ Меню'
                 keyboard = createMainMenu()
 
-            bot.send_message(chat_id, text=text, reply_markup=keyboard)
+            bot.send_message(chat_id, text=message, reply_markup=keyboard)
         else:
             if text == BACK_TO_MAIN_MENU:
-                text = '✅ Меню'
+                message = '✅ Меню'
                 keyboard = createMainMenu()
             elif text == MY_BOTS or text == BACK_TO_MY_BOTS_MENU or BOT_CREATE in text:
-                text = '✅ Меню'
-
                 if BOT_CREATE in text:
                     id_user_bot = createBot(text, chat_id)
                     if id_user_bot is None:
-                        text = '❌ Не удалось создать бота. Попробуйте еще раз.'
+                        message = '❌ Не удалось создать бота. Попробуйте еще раз.'
+
+                if message is None:
+                    message = '✅ Меню'
 
                 keyboard = createMyBotsMenu(chat_id)
                 if keyboard is None:
-                    text = '✅ У Вас пока нет ботов'
+                    message = '✅ У Вас пока нет ботов'
                     keyboard = types.InlineKeyboardMarkup()
 
                 keyboard.add(createBack(BACK_TO_MAIN_MENU))
             elif text == BUY_BOT or text == BACK_TO_BUY_BOTS_MENU:
-                text = '✅ Выберите бота'
+                message = '✅ Выберите бота'
                 keyboard = createBuyBotsMenu()
                 keyboard.add(createBack(BACK_TO_MAIN_MENU))
             elif BOT_CONNECT_TOKEN in text:
-                text = '✏ Отправьте в сообщении TOKEN бота'
+                message = '✏ Отправьте в сообщении TOKEN бота'
                 keyboard.add(createBack(BACK_TO_MY_BOTS_MENU))
             else:
                 keyboard.add(createBack(BACK_TO_MAIN_MENU))
 
-            bot.send_message(chat_id, text=f'{text}', reply_markup=keyboard)
+            bot.send_message(chat_id, text=f'{message}', reply_markup=keyboard)
 
     except Exception as e:
         return {'type': FAILURE, 'message': str(e)}
