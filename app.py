@@ -59,10 +59,7 @@ def createMainMenu():
 
 
 def createBuyBotsMenu():
-    keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton(text='📝 Бот записи клиентов', callback_data=BOT_RECORD_CLIENTS))
-
-    return keyboard
+    return types.InlineKeyboardButton(text='📝 Бот записи клиентов', callback_data=BOT_RECORD_CLIENTS)
 
 
 def createBackToMainMenu():
