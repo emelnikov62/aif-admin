@@ -37,7 +37,7 @@ def webhook():
                 keyboard.add(createBackToMainMenu())
             elif text == BUY_BOT:
                 text = 'Выберите бота'
-                keyboard.add(createBuyBotsMenu())
+                keyboard = createBuyBotsMenu()
                 keyboard.add(createBackToMainMenu())
             else:
                 keyboard.add(createBackToMainMenu())
@@ -59,7 +59,10 @@ def createMainMenu():
 
 
 def createBuyBotsMenu():
-    return types.InlineKeyboardButton(text='📝 Бот записи клиентов', callback_data=BOT_RECORD_CLIENTS)
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.add(types.InlineKeyboardButton(text='📝 Бот записи клиентов', callback_data=BOT_RECORD_CLIENTS))
+
+    return keyboard
 
 
 def createBackToMainMenu():
