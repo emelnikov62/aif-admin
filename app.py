@@ -7,6 +7,7 @@ app = Flask(__name__)
 SUCCESS = 'SUCCESS'
 FAILURE = 'FAILURE'
 STARTED = 'start'
+BACK_TO_MAIN_MENU = 'back_to_main_menu'
 
 
 @app.post('/aif/admin/webhook')
@@ -19,22 +20,18 @@ def webhook():
 
     try:
         bot = telebot.TeleBot(token)
+        keyboard = types.InlineKeyboardMarkup()
 
         if not callback_data:
-            if text == STARTED:
-                keyboard = None
+            if text == BACK_TO_MAIN_MENU:
+                keyboard = createMainMenu()
             else:
-                keyboard = types.InlineKeyboardMarkup()
-
-                my_bots = types.InlineKeyboardButton(text='🛅 Мои боты', callback_data='my_bots')
-                keyboard.add(my_bots)
-
-                buy_bot = types.InlineKeyboardButton(text='💰 Купить бота', callback_data='buy_bot')
-                keyboard.add(buy_bot)
+                keyboard = createMainMenu()
 
             bot.send_message(chat_id, text='✅ Меню', reply_markup=keyboard)
         else:
-            bot.send_message(chat_id, text=f'✅{text}')
+            keyboard.add(createBackToMainMenu())
+            bot.send_message(chat_id, text=f'✅ {text}')
 
     except Exception as e:
         return {'type': FAILURE, 'message': str(e)}
@@ -42,27 +39,17 @@ def webhook():
     return {'type': SUCCESS}
 
 
-# @bot.message_handler(content_types=['text'])
-# def get_message(message):
-#     print(message)
-#     keyboard = types.InlineKeyboardMarkup()  # наша клавиатура
-#     key_yes = types.InlineKeyboardButton(text='Да', callback_data='yes')  # кнопка «Да»
-#     keyboard.add(key_yes)  # добавляем кнопку в клавиатуру
-#     key_no = types.InlineKeyboardButton(text='Нет', callback_data='no')
-#     keyboard.add(key_no)
-#     bot.send_message(message.from_user.id, text='ok', reply_markup=keyboard)
-#
-#
-# @bot.callback_query_handler(func=lambda call: True)
-# def callback_worker(call):
-#     if call.data == "yes":  # call.data это callback_data, которую мы указали при объявлении кнопки
-#         bot.send_message(call.message.chat.id, '1')
-#     elif call.data == "no":
-#         bot.send_message(call.message.chat.id, '2')
-#
-#
-# # bot.set_webhook()
-# bot.polling(none_stop=True, interval=0)
+def createMainMenu():
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.add(types.InlineKeyboardButton(text='🛅 Мои боты', callback_data='my_bots'))
+    keyboard.add(types.InlineKeyboardButton(text='💰 Купить бота', callback_data='buy_bot'))
+
+    return keyboard
+
+
+def createBackToMainMenu():
+    return types.InlineKeyboardButton(text='⬅ Назад', callback_data=BACK_TO_MAIN_MENU)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80, debug=True)
