@@ -163,14 +163,19 @@ def getDbParams():
 def createBot(text, id):
     try:
         id_user_bot = None
+        id_user = None
 
         paramsDb = getDbParams()
         connection = psycopg2.connect(**paramsDb)
 
         cursor = connection.cursor()
-        sql = f"insert into n8n_test.aif_users(tg_id) values('{id}') returning id"
+        sql = f"select au.id from n8n_test.aif_users au where au.tg_id = '{id}'"
         cursor.execute(sql)
-        id_user = cursor.fetchone()[0]
+        if cursor.rowcount == 0:
+            sql = f"insert into n8n_test.aif_users(tg_id) values('{id}') returning id"
+            cursor.execute(sql)
+            id_user = cursor.fetchone()[0]
+
         if id_user is not None:
             botType = text.split(DELIMITER)[1]
             cursor.execute(f"select t.id from n8n_test.aif_bots t where t.type = '{botType}'")
