@@ -168,19 +168,21 @@ def createBot(text, id):
         cursor = connection.cursor()
         sql = f'insert into n8n_test.aif_users(tg_id) values({id}) returning id'
         cursor.execute(sql)
-        id_record = cursor.fetchone()[0]
-        if id_record is not None:
+        id_user = cursor.fetchone()[0]
+        if id_user is not None:
             botType = text.split(DELIMITER)[1]
             cursor.execute(f"select t.id from n8n_test.aif_bots t where t.type = '{botType}'")
             id_bot = cursor.fetchone()[0]
 
             if id_bot is not None:
-                sql = f'insert into n8n_test.aif_user_bots(aif_user_id, aif_bot_id) values({id_record}, {id_bot}) returning id'
+                sql = f'insert into n8n_test.aif_user_bots(aif_user_id, aif_bot_id) values({id_user}, {id_bot}) returning id'
                 cursor.execute(sql)
                 id_user_bot = cursor.fetchone()[0]
 
+        sendLog(id_user_bot)
         if id_user_bot is not None:
             connection.commit()
+            sendLog('commit')
 
         connection.close()
         return id_user_bot
