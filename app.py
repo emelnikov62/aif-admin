@@ -164,8 +164,10 @@ def createBot(text, id):
                 cursor.execute(sql)
                 id_user_bot = cursor.fetchone()[0]
 
-        connection.close()
+        if id_user_bot is not None:
+            connection.commit()
 
+        connection.close()
         return id_user_bot
     except Exception as e:
         sendLog(e)
