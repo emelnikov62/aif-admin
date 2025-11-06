@@ -107,40 +107,48 @@ def createBuyBotsMenu():
 
 # get aif bot types
 def getAifBotTypes():
-    paramsDb = getDbParams()
-    connection = psycopg2.connect(**paramsDb)
+    try:
+        paramsDb = getDbParams()
+        connection = psycopg2.connect(**paramsDb)
 
-    cursor = connection.cursor()
-    cursor.execute('select b.type, b.description from n8n_test.aif_bots b where b.active')
+        cursor = connection.cursor()
+        cursor.execute('select b.type, b.description from n8n_test.aif_bots b where b.active')
 
-    if cursor.rowcount == 0:
+        if cursor.rowcount == 0:
+            return None
+
+        botTypes = cursor.fetchall()
+        connection.close()
+
+        return botTypes
+    except Exception as e:
+        sendLog(str(e))
         return None
-
-    botTypes = cursor.fetchall()
-    connection.close()
-
-    return botTypes
 
 
 # get user aif bots
 def getMyAifBots(id):
-    paramsDb = getDbParams()
-    connection = psycopg2.connect(**paramsDb)
+    try:
+        paramsDb = getDbParams()
+        connection = psycopg2.connect(**paramsDb)
 
-    cursor = connection.cursor()
-    cursor.execute(f"select aub.id, ab.type, ab.description, aub.active"
-                   "  from n8n_test.aif_user_bots aub"
-                   "  join n8n_test.aif_bots ab on aub.aif_bot_id = ab.id"
-                   "  join n8n_test.aif_users au on au.id = aub.aif_user_id"
-                   " where au.tg_id = {id}")
+        cursor = connection.cursor()
+        cursor.execute(f"select aub.id, ab.type, ab.description, aub.active"
+                       "  from n8n_test.aif_user_bots aub"
+                       "  join n8n_test.aif_bots ab on aub.aif_bot_id = ab.id"
+                       "  join n8n_test.aif_users au on au.id = aub.aif_user_id"
+                       " where au.tg_id = {id}")
 
-    if cursor.rowcount == 0:
+        if cursor.rowcount == 0:
+            return None
+
+        myBots = cursor.fetchall()
+        connection.close()
+
+        return myBots
+    except Exception as e:
+        sendLog(str(e))
         return None
-
-    myBots = cursor.fetchall()
-    connection.close()
-
-    return myBots
 
 
 # get database param connection
@@ -193,22 +201,26 @@ def createBack(type):
 
 # create my bots menu
 def createMyBotsMenu(id):
-    myBots = getMyAifBots(id)
+    try:
+        myBots = getMyAifBots(id)
 
-    if myBots is None:
+        if myBots is None:
+            return None
+
+        keyboard = types.InlineKeyboardMarkup()
+        for myBot in myBots:
+            if myBot[3]:
+                text = '✅'
+            else:
+                text = '❌'
+            text = f'{text} {myBot[2]} {DELIMITER} {myBot[0]}'
+            keyboard.add(types.InlineKeyboardButton(text=text,
+                                                    callback_data=f'{BOT_SELECT}{DELIMITER}{myBot[0]}{DELIMITER}{myBot[1]}'))
+
+        return keyboard
+    except Exception as e:
+        sendLog(str(e))
         return None
-
-    keyboard = types.InlineKeyboardMarkup()
-    for myBot in myBots:
-        if myBot[3]:
-            text = '✅'
-        else:
-            text = '❌'
-        text = f'{text} {myBot[2]} {DELIMITER} {myBot[0]}'
-        keyboard.add(types.InlineKeyboardButton(text=text,
-                                                callback_data=f'{BOT_SELECT}{DELIMITER}{myBot[0]}{DELIMITER}{myBot[1]}'))
-
-    return keyboard
 
 
 # create manual to add bot
