@@ -6,6 +6,7 @@ app = Flask(__name__)
 
 SUCCESS = 'SUCCESS'
 FAILURE = 'FAILURE'
+STARTED = 'start'
 
 
 @app.post('/aif/admin/webhook')
@@ -13,16 +14,24 @@ def webhook():
     data = request.get_json()
     token = data.get('token')
     chat_id = data.get('chat_id')
+    text = data.get('text')
 
     try:
         bot = telebot.TeleBot(token)
 
-        keyboard = types.InlineKeyboardMarkup()
-        key_yes = types.InlineKeyboardButton(text='Да', callback_data='yes')
-        keyboard.add(key_yes)
-        key_no = types.InlineKeyboardButton(text='Нет', callback_data='no')
-        keyboard.add(key_no)
-        bot.send_message(chat_id, text='ok', reply_markup=keyboard)
+        keyboard = None
+
+        if text == STARTED:
+            keyboard = types.InlineKeyboardMarkup()
+            key_yes = types.InlineKeyboardButton(text='Да', callback_data='yes')
+            keyboard.add(key_yes)
+            key_no = types.InlineKeyboardButton(text='Нет', callback_data='no')
+            keyboard.add(key_no)
+
+        if keyboard is not None:
+            bot.send_message(chat_id, text='Выберите', reply_markup=keyboard)
+        else:
+            bot.send_message(chat_id, text='ok')
 
     except Exception as e:
         return {'type': FAILURE, 'message': str(e)}
