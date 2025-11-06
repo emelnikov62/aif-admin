@@ -1,3 +1,4 @@
+import psycopg2
 import telebot
 from flask import Flask, request
 from telebot import types
@@ -44,6 +45,9 @@ def webhook():
                 text = '✅ Меню'
                 keyboard = createMainMenu()
             elif text == MY_BOTS or text == BACK_TO_MY_BOTS_MENU or BOT_CREATE in text:
+                if BOT_CREATE in text:
+                    createBot(text, chat_id)
+
                 text = '✅ Меню'
                 keyboard.add(createMyBotsMenu())
                 keyboard.add(createBack(BACK_TO_MAIN_MENU))
@@ -78,11 +82,55 @@ def createMainMenu():
 
 
 def createBuyBotsMenu():
-    keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton(text='📝 Бот записи клиентов',
-                                            callback_data=f'{BOT_CREATE}{DELIMITER}{BOT_RECORD_CLIENTS}'))
+    try:
+        paramsDb = getDbParams()
+        connection = psycopg2.connect(**paramsDb)
 
-    return keyboard
+        cursor = connection.cursor()
+        cursor.execute('select b.type, b.description from n8n_test.aif_bots b where b.active')
+
+        if cursor.rowcount == 0:
+            return types.InlineKeyboardMarkup()
+
+        rows = cursor.fetchall()
+        connection.close()
+        keyboard = types.InlineKeyboardMarkup()
+        for row in rows:
+            keyboard.add(
+                types.InlineKeyboardButton(text=f'✅ {row[1]}', callback_data=f'{BOT_CREATE}{DELIMITER}{row[0]}'))
+
+        return keyboard
+    except Exception as e:
+        print(e)
+        return types.InlineKeyboardMarkup()
+
+
+def getDbParams():
+    return {'database': 'n8n_db', 'user': 'n8n_user', 'password': 'Mery1029384756$',
+            'host': 'amvera-emelnikov62-cnpg-n8n-db-rw', 'port': '5432'}
+
+
+def createBot(text, id):
+    try:
+        paramsDb = getDbParams()
+        connection = psycopg2.connect(**paramsDb)
+
+        cursor = connection.cursor()
+        sql = f'insert into n8n_test.aif_users(tg_id) values({id}) returning id'
+        cursor.execute(sql)
+        idRecord = cursor.fetchone()[0]
+        if idRecord is not None:
+            type = text.split(DELIMITER)[1]
+            cursor.execute('select * from n8n_test.aif_bots t where t.type = %s', (type))
+            idBot = cursor.fetchone()[0]
+
+            if idBot is not None:
+                sql = f'insert into n8n_test.aif_user_bots(aif_user_id, aif_bot_id) values({idRecord}, {idBot}) returning id'
+                cursor.execute(sql)
+
+        connection.close()
+    except Exception as e:
+        print(e)
 
 
 def createConnectBot(type):
