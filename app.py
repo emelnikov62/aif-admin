@@ -171,22 +171,18 @@ def createBot(text, id):
         sql = f"insert into n8n_test.aif_users(tg_id) values('{id}') returning id"
         cursor.execute(sql)
         id_user = cursor.fetchone()[0]
-        sendLog(id_user)
         if id_user is not None:
             botType = text.split(DELIMITER)[1]
             cursor.execute(f"select t.id from n8n_test.aif_bots t where t.type = '{botType}'")
             id_bot = cursor.fetchone()[0]
-            sendLog(id_bot)
 
             if id_bot is not None:
                 sql = f'insert into n8n_test.aif_user_bots(aif_user_id, aif_bot_id) values({id_user}, {id_bot}) returning id'
                 cursor.execute(sql)
                 id_user_bot = cursor.fetchone()[0]
-                sendLog(id_user_bot)
 
         if id_user_bot is not None:
             connection.commit()
-            sendLog('commit')
 
         connection.close()
         return id_user_bot
@@ -219,7 +215,7 @@ def createMyBotsMenu(id):
                 text = '✅'
             else:
                 text = '❌'
-            text = f'{text} {myBot[2]} {DELIMITER} {myBot[0]}'
+            text = f'{text} {myBot[2]} (ID: {myBot[0]})'
             keyboard.add(types.InlineKeyboardButton(text=text,
                                                     callback_data=f'{BOT_SELECT}{DELIMITER}{myBot[0]}{DELIMITER}{myBot[1]}'))
 
