@@ -3,7 +3,6 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-
 @app.post('/aif/admin/webhook')
 def webhook():
     data = request.get_json()
