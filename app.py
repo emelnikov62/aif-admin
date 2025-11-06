@@ -6,6 +6,7 @@ app = Flask(__name__)
 @app.post('/aif/admin/webhook')
 def webhook():
     data = request.get_json()
+    print(data)
 
     try:
         bot = telebot.TeleBot(data.get('token'))
