@@ -11,6 +11,7 @@ BACK_TO_MAIN_MENU = 'back_to_main_menu'
 MY_BOTS = 'my_bots'
 BUY_BOT = 'buy_bot'
 BOT_RECORD_CLIENTS = 'bot_recording_clients'
+BOT_CONNECT_TOKEN = 'bot_connect_token'
 
 
 @app.post('/aif/admin/webhook')
@@ -39,6 +40,10 @@ def webhook():
                 text = 'Выберите бота'
                 keyboard = createBuyBotsMenu()
                 keyboard.add(createBackToMainMenu())
+            elif text == BOT_RECORD_CLIENTS:
+                text = createManualAddBot()
+                keyboard.add(createConnectBot())
+                keyboard.add(createBackToMainMenu())
             else:
                 keyboard.add(createBackToMainMenu())
 
@@ -52,8 +57,8 @@ def webhook():
 
 def createMainMenu():
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton(text='🛅 Мои боты', callback_data=MY_BOTS))
-    keyboard.add(types.InlineKeyboardButton(text='💰 Купить бота', callback_data=BUY_BOT))
+    keyboard.add(types.InlineKeyboardButton(text='📦 Мои боты', callback_data=MY_BOTS))
+    keyboard.add(types.InlineKeyboardButton(text='🌐 Подключить бота', callback_data=BUY_BOT))
 
     return keyboard
 
@@ -65,8 +70,19 @@ def createBuyBotsMenu():
     return keyboard
 
 
+def createConnectBot():
+    return types.InlineKeyboardButton(text='✅ Привязать TOKEN', callback_data=BOT_CONNECT_TOKEN)
+
+
 def createBackToMainMenu():
     return types.InlineKeyboardButton(text='⬅ Назад', callback_data=BACK_TO_MAIN_MENU)
+
+
+def createManualAddBot():
+    return ('📋 Инструкция по подключению бота:\n\n'
+            '   ✅ создать бота при помощи @BotFather\n'
+            '   ✅ по кнопке "Привязать TOKEN" привязать токен бота\n'
+            '   ✅ настроить бота после привязки под свою специфику\n')
 
 
 if __name__ == '__main__':
