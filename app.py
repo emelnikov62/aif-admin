@@ -28,7 +28,7 @@ def webhook():
         else:
             if text == BACK_TO_MAIN_MENU:
                 keyboard = createMainMenu()
-                text = '✅ Меню'
+                text = 'Меню'
             else:
                 keyboard.add(createBackToMainMenu())
 
