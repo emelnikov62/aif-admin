@@ -33,12 +33,12 @@ def webhook():
         else:
             if text == BACK_TO_MAIN_MENU:
                 keyboard = createMainMenu()
-                text = 'Меню'
+                text = '✅ Меню'
             elif text == MY_BOTS:
                 text = '...'
                 keyboard.add(createBackToMainMenu())
             elif text == BUY_BOT:
-                text = 'Выберите бота'
+                text = '✅ Выберите бота'
                 keyboard = createBuyBotsMenu()
                 keyboard.add(createBackToMainMenu())
             elif text == BOT_RECORD_CLIENTS:
@@ -50,7 +50,7 @@ def webhook():
             else:
                 keyboard.add(createBackToMainMenu())
 
-            bot.send_message(chat_id, text=f'✅ {text}', reply_markup=keyboard)
+            bot.send_message(chat_id, text=f'{text}', reply_markup=keyboard)
 
     except Exception as e:
         return {'type': FAILURE, 'message': str(e)}
@@ -83,8 +83,8 @@ def createBackToMainMenu():
 
 def createManualAddBot():
     return ('📋 Инструкция по подключению бота:\n\n'
-            '   ✅ создать бота при помощи @BotFather\n'
-            '   ✅ по кнопке "Привязать TOKEN" привязать токен бота\n'
+            '   ✅ создать бота при помощи @BotFather\n\n'
+            '   ✅ по кнопке "Привязать TOKEN" привязать токен бота\n\n'
             '   ✅ настроить бота после привязки под свою специфику\n')
 
 
