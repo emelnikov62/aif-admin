@@ -15,12 +15,12 @@ def webhook():
     token = data.get('token')
     chat_id = data.get('chat_id')
     text = data.get('text')
-    callback_data = data.get('callback_data')
+    callback_data = data.get('callback')
 
     try:
         bot = telebot.TeleBot(token)
 
-        if callback_data is None:
+        if not callback_data:
             if text == STARTED:
                 keyboard = None
             else:
@@ -34,7 +34,7 @@ def webhook():
 
             bot.send_message(chat_id, text='✅ Меню', reply_markup=keyboard)
         else:
-            bot.send_message(chat_id, text='✅')
+            bot.send_message(chat_id, text=f'✅{text}')
 
     except Exception as e:
         return {'type': FAILURE, 'message': str(e)}
