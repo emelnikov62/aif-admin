@@ -8,9 +8,12 @@ SUCCESS = 'SUCCESS'
 FAILURE = 'FAILURE'
 STARTED = 'start'
 BACK_TO_MAIN_MENU = 'back_to_main_menu'
+BACK_TO_MY_BOTS_MENU = 'back_to_my_bots_menu'
+BACK_TO_BUY_BOTS_MENU = 'back_to_buy_bots_menu'
 MY_BOTS = 'my_bots'
 BUY_BOT = 'buy_bot'
-BOT_RECORD_CLIENTS = 'bot_recording_clients'
+BOT_CREATE = 'bot_create'
+BOT_RECORD_CLIENTS = 'recording_clients'
 BOT_CONNECT_TOKEN = 'bot_connect_token'
 DELIMITER = ';'
 
@@ -30,7 +33,7 @@ def webhook():
         if not callback_data:
             if len(text) == 46 and ':' in text:
                 text = '✅ TOKEN бота привзяан'
-                keyboard.add(createBackToMainMenu())
+                keyboard.add(createBack(BACK_TO_MY_BOTS_MENU))
             else:
                 text = '✅ Меню'
                 keyboard = createMainMenu()
@@ -38,24 +41,25 @@ def webhook():
             bot.send_message(chat_id, text=text, reply_markup=keyboard)
         else:
             if text == BACK_TO_MAIN_MENU:
-                keyboard = createMainMenu()
                 text = '✅ Меню'
-            elif text == MY_BOTS:
-                text = '...'
-                keyboard.add(createBackToMainMenu())
-            elif text == BUY_BOT:
+                keyboard = createMainMenu()
+            elif text == MY_BOTS or text == BACK_TO_MY_BOTS_MENU or BOT_CREATE in text:
+                text = '✅ Меню'
+                keyboard.add(createMyBotsMenu())
+                keyboard.add(createBack(BACK_TO_MAIN_MENU))
+            elif text == BUY_BOT or text == BACK_TO_BUY_BOTS_MENU:
                 text = '✅ Выберите бота'
                 keyboard = createBuyBotsMenu()
-                keyboard.add(createBackToMainMenu())
-            elif text == BOT_RECORD_CLIENTS:
-                text = createManualAddBot()
-                keyboard.add(createConnectBot(BOT_RECORD_CLIENTS))
-                keyboard.add(createBackToMainMenu())
+                keyboard.add(createBack(BACK_TO_MAIN_MENU))
+            # elif BOT_CREATE in text:
+            #     text = createManualAddBot()
+            #     keyboard.add(createConnectBot(BOT_RECORD_CLIENTS))
+            #     keyboard.add(createBack(BACK_TO_BUY_BOTS_MENU))
             elif BOT_CONNECT_TOKEN in text:
                 text = '✏ Отправьте в сообщении TOKEN бота'
-                keyboard.add(createBackToMainMenu())
+                keyboard.add(createBack(BACK_TO_MY_BOTS_MENU))
             else:
-                keyboard.add(createBackToMainMenu())
+                keyboard.add(createBack(BACK_TO_MAIN_MENU))
 
             bot.send_message(chat_id, text=f'{text}', reply_markup=keyboard)
 
@@ -75,7 +79,8 @@ def createMainMenu():
 
 def createBuyBotsMenu():
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton(text='📝 Бот записи клиентов', callback_data=BOT_RECORD_CLIENTS))
+    keyboard.add(types.InlineKeyboardButton(text='📝 Бот записи клиентов',
+                                            callback_data=f'{BOT_CREATE}{DELIMITER}{BOT_RECORD_CLIENTS}'))
 
     return keyboard
 
@@ -84,7 +89,11 @@ def createConnectBot(type):
     return types.InlineKeyboardButton(text='✅ Привязать TOKEN', callback_data=f'{BOT_CONNECT_TOKEN}{DELIMITER}{type}')
 
 
-def createBackToMainMenu():
+def createBack(type):
+    return types.InlineKeyboardButton(text='⬅ Назад', callback_data=type)
+
+
+def createMyBotsMenu():
     return types.InlineKeyboardButton(text='⬅ Назад', callback_data=BACK_TO_MAIN_MENU)
 
 
