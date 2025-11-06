@@ -1,20 +1,33 @@
 import telebot
 from flask import Flask, request
+from telebot import types
 
 app = Flask(__name__)
+
+SUCCESS = 'SUCCESS'
+FAILURE = 'FAILURE'
+
 
 @app.post('/aif/admin/webhook')
 def webhook():
     data = request.get_json()
-    print(data)
+    token = data.get('token')
+    chat_id = data.get('chat_id')
 
     try:
-        bot = telebot.TeleBot(data.get('token'))
-        bot.send_message(data.get('chat_id'), data.get('text'))
-    except Exception as e:
-        return {'type': 'FAIL', 'message': str(e)}
+        bot = telebot.TeleBot(token)
 
-    return {'type': 'SUCCESS'}
+        keyboard = types.InlineKeyboardMarkup()
+        key_yes = types.InlineKeyboardButton(text='Да', callback_data='yes')
+        keyboard.add(key_yes)
+        key_no = types.InlineKeyboardButton(text='Нет', callback_data='no')
+        keyboard.add(key_no)
+        bot.send_message(chat_id, text='ok', reply_markup=keyboard)
+
+    except Exception as e:
+        return {'type': FAILURE, 'message': str(e)}
+
+    return {'type': SUCCESS}
 
 
 # @bot.message_handler(content_types=['text'])
