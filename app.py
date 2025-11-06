@@ -166,7 +166,7 @@ def createBot(text, id):
         connection = psycopg2.connect(**paramsDb)
 
         cursor = connection.cursor()
-        sql = f'insert into n8n_test.aif_users(tg_id) values('{id}') returning id'
+        sql = f"insert into n8n_test.aif_users(tg_id) values('{id}') returning id"
         cursor.execute(sql)
         id_user = cursor.fetchone()[0]
         sendLog(id_user)
