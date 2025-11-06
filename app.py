@@ -46,7 +46,6 @@ def webhook():
                 text = '✅ Меню'
                 keyboard = createMainMenu()
             elif text == MY_BOTS or text == BACK_TO_MY_BOTS_MENU or BOT_CREATE in text:
-                sendLog(text)
                 if BOT_CREATE in text:
                     createBot(text, chat_id)
 
@@ -117,11 +116,9 @@ def createBot(text, id):
         sql = f'insert into n8n_test.aif_users(tg_id) values({id}) returning id'
         cursor.execute(sql)
         idRecord = cursor.fetchone()[0]
-        sendLog(idRecord)
         if idRecord is not None:
             type = text.split(DELIMITER)[1]
-            sendLog(type)
-            cursor.execute('select * from n8n_test.aif_bots t where t.type = %s', (type))
+            cursor.execute(f"select t.id from n8n_test.aif_bots t where t.type = '{type}'")
             idBot = cursor.fetchone()[0]
             sendLog(idBot)
 
