@@ -31,7 +31,7 @@ def webhook():
             bot.send_message(chat_id, text='✅ Меню', reply_markup=keyboard)
         else:
             keyboard.add(createBackToMainMenu())
-            bot.send_message(chat_id, text=f'✅ {text}')
+            bot.send_message(chat_id, text=f'✅ {text}', reply_markup=keyboard)
 
     except Exception as e:
         return {'type': FAILURE, 'message': str(e)}
