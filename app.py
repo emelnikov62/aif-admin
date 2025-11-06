@@ -28,8 +28,14 @@ def webhook():
         keyboard = types.InlineKeyboardMarkup()
 
         if not callback_data:
-            keyboard = createMainMenu()
-            bot.send_message(chat_id, text='✅ Меню', reply_markup=keyboard)
+            if len(text) == 46 and ':' in text:
+                text = '✅ TOKEN бота привзяан'
+                keyboard.add(createBackToMainMenu())
+            else:
+                text = '✅ Меню'
+                keyboard = createMainMenu()
+
+            bot.send_message(chat_id, text=text, reply_markup=keyboard)
         else:
             if text == BACK_TO_MAIN_MENU:
                 keyboard = createMainMenu()
@@ -46,6 +52,7 @@ def webhook():
                 keyboard.add(createConnectBot(BOT_RECORD_CLIENTS))
                 keyboard.add(createBackToMainMenu())
             elif BOT_CONNECT_TOKEN in text:
+                text = '✏ Отправьте в сообщении TOKEN бота'
                 keyboard.add(createBackToMainMenu())
             else:
                 keyboard.add(createBackToMainMenu())
