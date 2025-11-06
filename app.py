@@ -5,6 +5,8 @@ from telebot import types
 
 app = Flask(__name__)
 
+bot = telebot.TeleBot('7277396052:AAEIEaz200U8MXlRCy60aOsEkoFKC9Q2eds')
+
 SUCCESS = 'SUCCESS'
 FAILURE = 'FAILURE'
 STARTED = 'start'
@@ -17,18 +19,17 @@ BOT_CREATE = 'bot_create'
 BOT_RECORD_CLIENTS = 'recording_clients'
 BOT_CONNECT_TOKEN = 'bot_connect_token'
 DELIMITER = ';'
+BOT_LOGS_ID = -1002391679452
 
 
 @app.post('/aif/admin/webhook')
 def webhook():
     data = request.get_json()
-    token = data.get('token')
     chat_id = data.get('chat_id')
     text = data.get('text')
     callback_data = data.get('callback')
 
     try:
-        bot = telebot.TeleBot(token)
         keyboard = types.InlineKeyboardMarkup()
 
         if not callback_data:
@@ -45,7 +46,7 @@ def webhook():
                 text = '✅ Меню'
                 keyboard = createMainMenu()
             elif text == MY_BOTS or text == BACK_TO_MY_BOTS_MENU or BOT_CREATE in text:
-                print(text)
+                sendLog(text)
                 if BOT_CREATE in text:
                     createBot(text, chat_id)
 
@@ -98,7 +99,7 @@ def createBuyBotsMenu():
 
         return keyboard
     except Exception as e:
-        print(e)
+        sendLog(str(e))
         return types.InlineKeyboardMarkup()
 
 
@@ -116,23 +117,23 @@ def createBot(text, id):
         sql = f'insert into n8n_test.aif_users(tg_id) values({id}) returning id'
         cursor.execute(sql)
         idRecord = cursor.fetchone()[0]
-        print(idRecord)
+        sendLog(idRecord)
         if idRecord is not None:
             type = text.split(DELIMITER)[1]
-            print(type)
+            sendLog(type)
             cursor.execute('select * from n8n_test.aif_bots t where t.type = %s', (type))
             idBot = cursor.fetchone()[0]
-            print(idBot)
+            sendLog(idBot)
 
             if idBot is not None:
                 sql = f'insert into n8n_test.aif_user_bots(aif_user_id, aif_bot_id) values({idRecord}, {idBot}) returning id'
                 cursor.execute(sql)
                 idUserBot = cursor.fetchone()[0]
-                print(idUserBot)
+                sendLog(idUserBot)
 
         connection.close()
     except Exception as e:
-        print(e)
+        sendLog(e)
 
 
 def createConnectBot(type):
@@ -152,6 +153,10 @@ def createManualAddBot():
             '   ✅ создать бота при помощи @BotFather\n\n'
             '   ✅ по кнопке "Привязать TOKEN" привязать токен бота\n\n'
             '   ✅ настроить бота после привязки под свою специфику\n\n')
+
+
+def sendLog(text):
+    bot.send_message(BOT_LOGS_ID, text=text)
 
 
 if __name__ == '__main__':
