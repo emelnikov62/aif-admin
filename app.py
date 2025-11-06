@@ -133,11 +133,11 @@ def getMyAifBots(id):
         connection = psycopg2.connect(**paramsDb)
 
         cursor = connection.cursor()
-        cursor.execute(f"select aub.id, ab.type, ab.description, aub.active"
-                       "  from n8n_test.aif_user_bots aub"
-                       "  join n8n_test.aif_bots ab on aub.aif_bot_id = ab.id"
-                       "  join n8n_test.aif_users au on au.id = aub.aif_user_id"
-                       " where au.tg_id = {id}")
+        cursor.execute(f"select aub.id, ab.type, ab.description, aub.active "
+                       f"  from n8n_test.aif_user_bots aub "
+                       f"  join n8n_test.aif_bots ab on aub.aif_bot_id = ab.id "
+                       f"  join n8n_test.aif_users au on au.id = aub.aif_user_id "
+                       f" where au.tg_id = '{id}'")
 
         if cursor.rowcount == 0:
             return None
