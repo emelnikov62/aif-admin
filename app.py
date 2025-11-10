@@ -110,8 +110,8 @@ def createSelectedBotMenu(text):
             types.InlineKeyboardButton(text=f'📊 Статистика', callback_data=f'{BOT_STATS}{DELIMITER}{user_bot[0]}'))
         keyboard.add(
             types.InlineKeyboardButton(text=f'🔧 Настройки', callback_data=f'{BOT_SETTINGS}{DELIMITER}{user_bot[0]}'))
-        keyboard.add(
-            types.InlineKeyboardButton(text=f'⛔ Удалить', callback_data=f'{BOT_DELETE}{DELIMITER}{user_bot[0]}'))
+
+    keyboard.add(types.InlineKeyboardButton(text=f'⛔ Удалить', callback_data=f'{BOT_DELETE}{DELIMITER}{user_bot[0]}'))
 
     return keyboard
 
