@@ -57,7 +57,7 @@ def webhook():
                     if id_user_bot is None:
                         message = '❌ Не удалось создать бота. Попробуйте еще раз.'
 
-                if BOT_CREATE in text:
+                if BOT_DELETE in text:
                     if not deleteAifBot(text):
                         message = '❌ Не удалось удалить бота. Попробуйте еще раз.'
 
