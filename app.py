@@ -19,6 +19,9 @@ BOT_CREATE = 'bot_create'
 BOT_SELECT = 'bot_select'
 BOT_RECORD_CLIENTS = 'recording_clients'
 BOT_CONNECT_TOKEN = 'bot_connect_token'
+BOT_DELETE = 'bot_delete'
+BOT_STATS = 'bot_stats'
+BOT_SETTINGS = 'bot_settings'
 DELIMITER = ';'
 BOT_LOGS_ID = -1002391679452
 
@@ -48,11 +51,15 @@ def webhook():
             if text == BACK_TO_MAIN_MENU:
                 message = '✅ Меню'
                 keyboard = createMainMenu()
-            elif text == MY_BOTS or text == BACK_TO_MY_BOTS_MENU or BOT_CREATE in text:
+            elif text == MY_BOTS or text == BACK_TO_MY_BOTS_MENU or BOT_CREATE in text or BOT_DELETE in text:
                 if BOT_CREATE in text:
                     id_user_bot = createBot(text, chat_id)
                     if id_user_bot is None:
                         message = '❌ Не удалось создать бота. Попробуйте еще раз.'
+
+                if BOT_CREATE in text:
+                    if not deleteAifBot(text):
+                        message = '❌ Не удалось удалить бота. Попробуйте еще раз.'
 
                 if message is None:
                     message = '✅ Меню'
@@ -70,6 +77,10 @@ def webhook():
             elif BOT_CONNECT_TOKEN in text:
                 message = '✏ Отправьте в сообщении TOKEN бота'
                 keyboard.add(createBack(BACK_TO_MY_BOTS_MENU))
+            elif BOT_SELECT in text:
+                message = '✅ Меню'
+                keyboard = createSelectedBotMenu(text)
+                keyboard.add(createBack(BACK_TO_MY_BOTS_MENU))
             else:
                 keyboard.add(createBack(BACK_TO_MAIN_MENU))
 
@@ -79,6 +90,30 @@ def webhook():
         return {'type': FAILURE, 'message': str(e)}
 
     return {'type': SUCCESS}
+
+
+# create selected bot menu
+def createSelectedBotMenu(text):
+    keyboard = types.InlineKeyboardMarkup()
+
+    params = text.split(DELIMITER)
+
+    user_bot = getMyAifBot(params[1])
+    if user_bot is None:
+        return types.InlineKeyboardMarkup()
+
+    if user_bot[4] is None:
+        keyboard.add(types.InlineKeyboardButton(text=f'✅ Привязать TOKEN',
+                                                callback_data=f'{BOT_CONNECT_TOKEN}{DELIMITER}{user_bot[0]}'))
+    else:
+        keyboard.add(
+            types.InlineKeyboardButton(text=f'📊 Статистика', callback_data=f'{BOT_STATS}{DELIMITER}{user_bot[0]}'))
+        keyboard.add(
+            types.InlineKeyboardButton(text=f'🔧 Настройки', callback_data=f'{BOT_SETTINGS}{DELIMITER}{user_bot[0]}'))
+        keyboard.add(
+            types.InlineKeyboardButton(text=f'⛔ Удалить', callback_data=f'{BOT_DELETE}{DELIMITER}{user_bot[0]}'))
+
+    return keyboard
 
 
 # create main menu
@@ -135,7 +170,7 @@ def getMyAifBots(id):
         connection = psycopg2.connect(**paramsDb)
 
         cursor = connection.cursor()
-        cursor.execute(f"select aub.id, ab.type, ab.description, aub.active "
+        cursor.execute(f"select aub.id, ab.type, ab.description, aub.active, aub.token "
                        f"  from n8n_test.aif_user_bots aub "
                        f"  join n8n_test.aif_bots ab on aub.aif_bot_id = ab.id "
                        f"  join n8n_test.aif_users au on au.id = aub.aif_user_id "
@@ -148,6 +183,55 @@ def getMyAifBots(id):
         connection.close()
 
         return myBots
+    except Exception as e:
+        sendLog(str(e))
+        return None
+
+
+# get user aif bot by id
+def getMyAifBot(id):
+    try:
+        paramsDb = getDbParams()
+        connection = psycopg2.connect(**paramsDb)
+
+        cursor = connection.cursor()
+        cursor.execute(f"select aub.id, ab.type, ab.description, aub.active, aub.token "
+                       f"  from n8n_test.aif_user_bots aub "
+                       f"  join n8n_test.aif_bots ab on aub.aif_bot_id = ab.id "
+                       f"  join n8n_test.aif_users au on au.id = aub.aif_user_id "
+                       f" where aub.id = '{id}'")
+
+        if cursor.rowcount == 0:
+            return None
+
+        user_bot = cursor.fetchall()[0]
+        connection.close()
+
+        return user_bot
+
+    except Exception as e:
+        sendLog(str(e))
+        return None
+
+
+# get user aif bot by id
+def deleteAifBot(text):
+    try:
+        paramsDb = getDbParams()
+        connection = psycopg2.connect(**paramsDb)
+        user_bot_id = text.split(DELIMITER)[1]
+
+        cursor = connection.cursor()
+        cursor.execute(f"delete from n8n_test.aif_user_bots aub where aub.id = {user_bot_id}")
+
+        if cursor.rowcount == 0:
+            return False
+
+        connection.commit()
+        connection.close()
+
+        return True
+
     except Exception as e:
         sendLog(str(e))
         return None
@@ -218,7 +302,7 @@ def createMyBotsMenu(id):
 
         keyboard = types.InlineKeyboardMarkup()
         for myBot in myBots:
-            if myBot[3]:
+            if myBot[3] and myBot[4] is not None:
                 text = '✅'
             else:
                 text = '❌'
