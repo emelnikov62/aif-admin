@@ -40,7 +40,11 @@ def webhook():
 
         if not callback_data:
             if len(text) == 46 and ':' in text:
-                message = '✅ TOKEN бота привзяан'
+                if linkTokenBot(text):
+                    message = '✅ TOKEN бота привзяан'
+                else:
+                    message = '❌ Не удалось привязать TOKEN бота. Попробуйте еще раз.'
+
                 keyboard.add(createBack(BACK_TO_MY_BOTS_MENU))
             else:
                 message = '✅ Меню'
@@ -111,6 +115,7 @@ def createSelectedBotMenu(text):
         keyboard.add(
             types.InlineKeyboardButton(text=f'🔧 Настройки', callback_data=f'{BOT_SETTINGS}{DELIMITER}{user_bot[0]}'))
 
+    keyboard.add(types.InlineKeyboardButton(text=f'✅ Open', web_app='https://aif-admin-emelnikov62.amvera.io/test'))
     keyboard.add(types.InlineKeyboardButton(text=f'⛔ Удалить', callback_data=f'{BOT_DELETE}{DELIMITER}{user_bot[0]}'))
 
     return keyboard
@@ -214,6 +219,30 @@ def getMyAifBot(id):
         return None
 
 
+# link token to user bot
+def linkTokenBot(text):
+    try:
+        paramsDb = getDbParams()
+        connection = psycopg2.connect(**paramsDb)
+        user_bot_id = text.split(DELIMITER)[1]
+        user_bot_token = text.split(DELIMITER)[2]
+
+        cursor = connection.cursor()
+        cursor.execute(f"update n8n_test.aif_user_bots set token = '{user_bot_token}' where id = '{user_bot_id}'")
+
+        if cursor.rowcount == 0:
+            return False
+
+        connection.commit()
+        connection.close()
+
+        return True
+
+    except Exception as e:
+        sendLog(str(e))
+        return False
+
+
 # get user aif bot by id
 def deleteAifBot(text):
     try:
@@ -234,7 +263,7 @@ def deleteAifBot(text):
 
     except Exception as e:
         sendLog(str(e))
-        return None
+        return False
 
 
 # get database param connection
@@ -329,5 +358,10 @@ def sendLog(text):
     bot.send_message(BOT_LOGS_ID, text=text)
 
 
+@app.get('/test')
+def test():
+    return '<div style="color: red">ok</div>'
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80, debug=True)
+    app.run(host='0.0.0.0', port=8081, debug=True)
