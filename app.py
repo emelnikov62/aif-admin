@@ -355,7 +355,7 @@ def linkBotForm():
 
 @app.post('/link-bot')
 def linkBot():
-    data = request.get_json()
+    data = request.form
     if linkTokenBot(data.get('id'), data.get('token')):
         return '<div>ok</div>'
     else:
