@@ -1,4 +1,5 @@
 import psycopg2
+import requests
 import telebot
 from flask import Flask, request
 from telebot import types
@@ -26,7 +27,7 @@ DELIMITER = ';'
 BOT_LOGS_ID = -1002391679452
 
 
-# webhook
+# webhook admin bot
 @app.post('/aif/admin/webhook')
 def webhook():
     data = request.get_json()
@@ -40,41 +41,41 @@ def webhook():
 
         if not callback_data:
             message = '✅ Меню'
-            keyboard = createMainMenu()
+            keyboard = create_main_menu()
             bot.send_message(chat_id, text=message, reply_markup=keyboard)
         else:
             if text == BACK_TO_MAIN_MENU:
                 message = '✅ Меню'
-                keyboard = createMainMenu()
+                keyboard = create_main_menu()
             elif text == MY_BOTS or text == BACK_TO_MY_BOTS_MENU or BOT_CREATE in text or BOT_DELETE in text:
                 if BOT_CREATE in text:
-                    id_user_bot = createBot(text, chat_id)
+                    id_user_bot = create_bot(text, chat_id)
                     if id_user_bot is None:
                         message = '❌ Не удалось создать бота. Попробуйте еще раз.'
 
                 if BOT_DELETE in text:
-                    if not deleteAifBot(text):
+                    if not delete_aif_bot(text):
                         message = '❌ Не удалось удалить бота. Попробуйте еще раз.'
 
                 if message is None:
                     message = '✅ Меню'
 
-                keyboard = createMyBotsMenu(chat_id)
+                keyboard = create_my_bots_menu(chat_id)
                 if keyboard is None:
                     message = '✅ У Вас пока нет ботов'
                     keyboard = types.InlineKeyboardMarkup()
 
-                keyboard.add(createBack(BACK_TO_MAIN_MENU))
+                keyboard.add(create_back_btn(BACK_TO_MAIN_MENU))
             elif text == BUY_BOT or text == BACK_TO_BUY_BOTS_MENU:
                 message = '✅ Выберите бота'
-                keyboard = createBuyBotsMenu()
-                keyboard.add(createBack(BACK_TO_MAIN_MENU))
+                keyboard = create_buy_bots_menu()
+                keyboard.add(create_back_btn(BACK_TO_MAIN_MENU))
             elif BOT_SELECT in text:
                 message = '✅ Меню'
-                keyboard = createSelectedBotMenu(text)
-                keyboard.add(createBack(BACK_TO_MY_BOTS_MENU))
+                keyboard = create_selected_bot_menu(text)
+                keyboard.add(create_back_btn(BACK_TO_MY_BOTS_MENU))
             else:
-                keyboard.add(createBack(BACK_TO_MAIN_MENU))
+                keyboard.add(create_back_btn(BACK_TO_MAIN_MENU))
 
             bot.send_message(chat_id, text=f'{message}', reply_markup=keyboard)
 
@@ -84,13 +85,26 @@ def webhook():
     return {'type': SUCCESS}
 
 
+# webhook client bot
+@app.post('/aif/client/webhook')
+def webhook_client():
+    data = request.get_json()
+    chat_id = data.get('chat_id')
+    text = data.get('text')
+    token = data.get('token')
+    callback_data = data.get('callback')
+
+    bot_client = telebot.TeleBot(token)
+    bot_client.send_message(chat_id, text=text)
+
+
 # create selected bot menu
-def createSelectedBotMenu(text):
+def create_selected_bot_menu(text):
     keyboard = types.InlineKeyboardMarkup()
 
     params = text.split(DELIMITER)
 
-    user_bot = getMyAifBot(params[1])
+    user_bot = get_my_aif_bot(params[1])
     if user_bot is None:
         return types.InlineKeyboardMarkup()
 
@@ -109,7 +123,7 @@ def createSelectedBotMenu(text):
 
 
 # create main menu
-def createMainMenu():
+def create_main_menu():
     keyboard = types.InlineKeyboardMarkup()
     keyboard.add(types.InlineKeyboardButton(text='📦 Мои боты', callback_data=MY_BOTS))
     keyboard.add(types.InlineKeyboardButton(text='🌐 Подключить бота', callback_data=BUY_BOT))
@@ -118,11 +132,11 @@ def createMainMenu():
 
 
 # create buy bots menu
-def createBuyBotsMenu():
+def create_buy_bots_menu():
     try:
         keyboard = types.InlineKeyboardMarkup()
 
-        botTypes = getAifBotTypes()
+        botTypes = get_aif_bot_types()
         if botTypes is not None:
             for botType in botTypes:
                 keyboard.add(types.InlineKeyboardButton(text=f'✅ {botType[1]}',
@@ -130,14 +144,14 @@ def createBuyBotsMenu():
 
         return keyboard
     except Exception as e:
-        sendLog(str(e))
+        send_log(str(e))
         return types.InlineKeyboardMarkup()
 
 
 # get aif bot types
-def getAifBotTypes():
+def get_aif_bot_types():
     try:
-        paramsDb = getDbParams()
+        paramsDb = get_db_params()
         connection = psycopg2.connect(**paramsDb)
 
         cursor = connection.cursor()
@@ -151,14 +165,14 @@ def getAifBotTypes():
 
         return botTypes
     except Exception as e:
-        sendLog(str(e))
+        send_log(str(e))
         return None
 
 
 # get user aif bots
-def getMyAifBots(id):
+def get_my_aif_bots(id):
     try:
-        paramsDb = getDbParams()
+        paramsDb = get_db_params()
         connection = psycopg2.connect(**paramsDb)
 
         cursor = connection.cursor()
@@ -176,14 +190,14 @@ def getMyAifBots(id):
 
         return myBots
     except Exception as e:
-        sendLog(str(e))
+        send_log(str(e))
         return None
 
 
 # get user aif bot by id
-def getMyAifBot(id):
+def get_my_aif_bot(id):
     try:
-        paramsDb = getDbParams()
+        paramsDb = get_db_params()
         connection = psycopg2.connect(**paramsDb)
 
         cursor = connection.cursor()
@@ -202,17 +216,17 @@ def getMyAifBot(id):
         return user_bot
 
     except Exception as e:
-        sendLog(str(e))
+        send_log(str(e))
         return None
 
 
 # link token to user bot
-def linkTokenBot(user_bot_id, user_bot_token):
+def link_token_bot(user_bot_id, user_bot_token):
     try:
         if len(user_bot_token) != 46:
             return False
 
-        paramsDb = getDbParams()
+        paramsDb = get_db_params()
         connection = psycopg2.connect(**paramsDb)
 
         cursor = connection.cursor()
@@ -224,17 +238,21 @@ def linkTokenBot(user_bot_id, user_bot_token):
         connection.commit()
         connection.close()
 
+        response = requests.get(
+            f'https://api.telegram.org/bot{user_bot_token}/setwebhook?url=https://n8n-agent-emelnikov62.amvera.io/webhook/aif/client/webhook?id={user_bot_id}')
+        send_log(str(response.text))
+
         return True
 
     except Exception as e:
-        sendLog(str(e))
+        send_log(str(e))
         return False
 
 
 # get user aif bot by id
-def deleteAifBot(text):
+def delete_aif_bot(text):
     try:
-        paramsDb = getDbParams()
+        paramsDb = get_db_params()
         connection = psycopg2.connect(**paramsDb)
         user_bot_id = text.split(DELIMITER)[1]
 
@@ -250,23 +268,23 @@ def deleteAifBot(text):
         return True
 
     except Exception as e:
-        sendLog(str(e))
+        send_log(str(e))
         return False
 
 
 # get database param connection
-def getDbParams():
+def get_db_params():
     return {'database': 'n8n_db', 'user': 'n8n_user', 'password': 'Mery1029384756$',
             'host': 'amvera-emelnikov62-cnpg-n8n-db-rw', 'port': '5432'}
 
 
 # create user bot
-def createBot(text, id):
+def create_bot(text, id):
     try:
         id_user_bot = None
         id_user = None
 
-        paramsDb = getDbParams()
+        paramsDb = get_db_params()
         connection = psycopg2.connect(**paramsDb)
 
         cursor = connection.cursor()
@@ -295,24 +313,19 @@ def createBot(text, id):
         connection.close()
         return id_user_bot
     except Exception as e:
-        sendLog(e)
+        send_log(e)
         return None
 
 
-# create connect bot button
-def createConnectBot(type):
-    return types.InlineKeyboardButton(text='✅ Привязать TOKEN', callback_data=f'{BOT_CONNECT_TOKEN}{DELIMITER}{type}')
-
-
 # create back button
-def createBack(type):
+def create_back_btn(type):
     return types.InlineKeyboardButton(text='⬅ Назад', callback_data=type)
 
 
 # create my bots menu
-def createMyBotsMenu(id):
+def create_my_bots_menu(id):
     try:
-        myBots = getMyAifBots(id)
+        myBots = get_my_aif_bots(id)
 
         if myBots is None:
             return None
@@ -329,12 +342,12 @@ def createMyBotsMenu(id):
 
         return keyboard
     except Exception as e:
-        sendLog(str(e))
+        send_log(str(e))
         return None
 
 
 # create manual to add bot
-def createManualAddBot():
+def create_manual_add_bot():
     return ('📋 Инструкция по подключению бота:\n\n'
             '   ✅ создать бота при помощи @BotFather\n\n'
             '   ✅ по кнопке "Привязать TOKEN" привязать токен бота\n\n'
@@ -342,13 +355,13 @@ def createManualAddBot():
 
 
 # send log to group TG
-def sendLog(text):
+def send_log(text):
     bot.send_message(BOT_LOGS_ID, text=text)
 
 
 # link bot form
 @app.get('/link-bot-form')
-def linkBotForm():
+def link_bot_form():
     id = request.args.get('id')
     return ('<form method="post" action="https://aif-admin-emelnikov62.amvera.io/link-bot">'
             '<input type="text" name="token"/>'
@@ -359,9 +372,9 @@ def linkBotForm():
 
 # link bot update
 @app.post('/link-bot')
-def linkBot():
+def link_bot():
     data = request.form
-    if linkTokenBot(data.get('id'), data.get('token')):
+    if link_token_bot(data.get('id'), data.get('token')):
         return '<div>ok</div>'
     else:
         return '<div>error</div>'
