@@ -89,6 +89,7 @@ def webhook():
 @app.post('/aif/client/webhook')
 def webhook_client():
     data = request.get_json()
+    send_log(data)
     chat_id = data.get('chat_id')
     text = data.get('text')
     token = data.get('token')
