@@ -89,7 +89,6 @@ def webhook():
 @app.post('/aif/client/webhook')
 def webhook_client():
     data = request.get_json()
-    send_log(data)
     chat_id = data.get('chat_id')
     text = data.get('text')
     id = data.get('id')
@@ -105,7 +104,7 @@ def webhook_client():
         if cursor.rowcount != 0:
             token = cursor.fetchone()[0]
             bot_client = telebot.TeleBot(token)
-            bot_client.send_message(chat_id, text=text)
+            bot_client.send_message(chat_id, text=f'📟 Привет!')
 
     except Exception as e:
         send_log(str(e))
@@ -251,9 +250,8 @@ def link_token_bot(user_bot_id, user_bot_token):
         connection.commit()
         connection.close()
 
-        response = requests.get(
+        requests.get(
             f'https://api.telegram.org/bot{user_bot_token}/setwebhook?url=https://n8n-agent-emelnikov62.amvera.io/webhook/aif/client/webhook?id={user_bot_id}')
-        send_log(str(response.text))
 
         return True
 
