@@ -39,17 +39,8 @@ def webhook():
         keyboard = types.InlineKeyboardMarkup()
 
         if not callback_data:
-            if len(text) == 46 and ':' in text:
-                if linkTokenBot(text):
-                    message = '✅ TOKEN бота привзяан'
-                else:
-                    message = '❌ Не удалось привязать TOKEN бота. Попробуйте еще раз.'
-
-                keyboard.add(createBack(BACK_TO_MY_BOTS_MENU))
-            else:
-                message = '✅ Меню'
-                keyboard = createMainMenu()
-
+            message = '✅ Меню'
+            keyboard = createMainMenu()
             bot.send_message(chat_id, text=message, reply_markup=keyboard)
         else:
             if text == BACK_TO_MAIN_MENU:
@@ -78,9 +69,6 @@ def webhook():
                 message = '✅ Выберите бота'
                 keyboard = createBuyBotsMenu()
                 keyboard.add(createBack(BACK_TO_MAIN_MENU))
-            elif BOT_CONNECT_TOKEN in text:
-                message = '✏ Отправьте в сообщении TOKEN бота'
-                keyboard.add(createBack(BACK_TO_MY_BOTS_MENU))
             elif BOT_SELECT in text:
                 message = '✅ Меню'
                 keyboard = createSelectedBotMenu(text)
@@ -107,16 +95,14 @@ def createSelectedBotMenu(text):
         return types.InlineKeyboardMarkup()
 
     if user_bot[4] is None:
-        keyboard.add(types.InlineKeyboardButton(text=f'✅ Привязать TOKEN',
-                                                callback_data=f'{BOT_CONNECT_TOKEN}{DELIMITER}{user_bot[0]}'))
+        keyboard.add(types.KeyboardButton(text=f'✅ Привязать TOKEN', web_app=types.WebAppInfo(
+            f'https://aif-admin-emelnikov62.amvera.io/link-bot-form?id={params[1]}')))
     else:
         keyboard.add(
             types.InlineKeyboardButton(text=f'📊 Статистика', callback_data=f'{BOT_STATS}{DELIMITER}{user_bot[0]}'))
         keyboard.add(
             types.InlineKeyboardButton(text=f'🔧 Настройки', callback_data=f'{BOT_SETTINGS}{DELIMITER}{user_bot[0]}'))
 
-    keyboard.add(
-        types.KeyboardButton(text=f'✅ Open', web_app=types.WebAppInfo('https://aif-admin-emelnikov62.amvera.io/test')))
     keyboard.add(types.InlineKeyboardButton(text=f'⛔ Удалить', callback_data=f'{BOT_DELETE}{DELIMITER}{user_bot[0]}'))
 
     return keyboard
@@ -221,12 +207,10 @@ def getMyAifBot(id):
 
 
 # link token to user bot
-def linkTokenBot(text):
+def linkTokenBot(user_bot_id, user_bot_token):
     try:
         paramsDb = getDbParams()
         connection = psycopg2.connect(**paramsDb)
-        user_bot_id = text.split(DELIMITER)[1]
-        user_bot_token = text.split(DELIMITER)[2]
 
         cursor = connection.cursor()
         cursor.execute(f"update n8n_test.aif_user_bots set token = '{user_bot_token}' where id = '{user_bot_id}'")
@@ -359,9 +343,23 @@ def sendLog(text):
     bot.send_message(BOT_LOGS_ID, text=text)
 
 
-@app.get('/test')
-def test():
-    return '<div style="color: red">ok</div>'
+@app.get('/link-bot-form')
+def linkBotForm():
+    id = request.args.get('id')
+    return ('<form method="post" action="https://aif-admin-emelnikov62.amvera.io/link-bot">'
+            '<input type="text" name="token"/>'
+            f'<input type="hidden" name="id" value="{id}"/>'
+            '<input type="submit" value="Привязать"/>'
+            '</form>')
+
+
+@app.post('/link-bot')
+def linkBot():
+    data = request.get_json()
+    if linkTokenBot(data.get('id'), data.get('token')):
+        return '<div>ok</div>'
+    else:
+        return '<div>error</div>'
 
 
 if __name__ == '__main__':
