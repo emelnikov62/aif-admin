@@ -94,6 +94,8 @@ def createSelectedBotMenu(text):
     if user_bot is None:
         return types.InlineKeyboardMarkup()
 
+    sendLog(user_bot)
+
     if user_bot[4] is None:
         keyboard.add(types.KeyboardButton(text=f'✅ Привязать TOKEN', web_app=types.WebAppInfo(
             f'https://aif-admin-emelnikov62.amvera.io/link-bot-form?id={params[1]}')))
@@ -343,6 +345,7 @@ def sendLog(text):
     bot.send_message(BOT_LOGS_ID, text=text)
 
 
+# link bot form
 @app.get('/link-bot-form')
 def linkBotForm():
     id = request.args.get('id')
@@ -353,6 +356,7 @@ def linkBotForm():
             '</form>')
 
 
+# link bot update
 @app.post('/link-bot')
 def linkBot():
     data = request.form
