@@ -94,7 +94,7 @@ def createSelectedBotMenu(text):
     if user_bot is None:
         return types.InlineKeyboardMarkup()
 
-    sendLog(user_bot)
+    sendLog(f'{user_bot[0]}, {user_bot[1]}, {user_bot[2]}, {user_bot[3]}, {user_bot[4]}')
 
     if user_bot[4] is None:
         keyboard.add(types.KeyboardButton(text=f'✅ Привязать TOKEN', web_app=types.WebAppInfo(
