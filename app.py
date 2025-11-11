@@ -115,7 +115,8 @@ def createSelectedBotMenu(text):
         keyboard.add(
             types.InlineKeyboardButton(text=f'🔧 Настройки', callback_data=f'{BOT_SETTINGS}{DELIMITER}{user_bot[0]}'))
 
-    keyboard.add(types.InlineKeyboardButton(text=f'✅ Open', web_app='https://aif-admin-emelnikov62.amvera.io/test'))
+    keyboard.add(
+        types.KeyboardButton(text=f'✅ Open', web_app=types.WebAppInfo('https://aif-admin-emelnikov62.amvera.io/test')))
     keyboard.add(types.InlineKeyboardButton(text=f'⛔ Удалить', callback_data=f'{BOT_DELETE}{DELIMITER}{user_bot[0]}'))
 
     return keyboard
