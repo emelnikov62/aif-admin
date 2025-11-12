@@ -95,6 +95,18 @@ def webhook_client():
     callback_data = data.get('callback')
 
     try:
+        token = get_user_token(id)
+        if token is not None:
+            bot_client = telebot.TeleBot(token)
+            bot_client.send_message(chat_id, text=f'📟 Привет!')
+
+    except Exception as e:
+        send_log(str(e))
+
+
+# get user bot token
+def get_user_token(id):
+    try:
         paramsDb = get_db_params()
         connection = psycopg2.connect(**paramsDb)
 
@@ -102,12 +114,12 @@ def webhook_client():
         cursor.execute(f"select token from n8n_test.aif_user_bots where id = '{id}'")
 
         if cursor.rowcount != 0:
-            token = cursor.fetchone()[0]
-            bot_client = telebot.TeleBot(token)
-            bot_client.send_message(chat_id, text=f'📟 Привет!')
+            return cursor.fetchone()[0]
 
+        return None
     except Exception as e:
         send_log(str(e))
+        return None
 
 
 # create selected bot menu
